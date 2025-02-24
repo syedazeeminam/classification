@@ -1,0 +1,57 @@
+#Connecting colab notebook with the drive 
+from google.colab import drive
+drive.mount('/content/drive')
+
+#Reading the churn dataset as a pandas dataframe
+import pandas as pd
+churn_df = pd.read_csv('/content/drive/MyDrive/churn.csv')
+
+#Inspecting the dataset for its features and target variables 
+churn_df.head()
+
+#Inspecting the records and features in dataset
+churn_df.shape
+
+#For data cleaning purposes searching for any missing values 
+import missingno as msno
+msno.matrix(churn_df)
+
+#Droping the NaN values in the dataset
+import numpy as np
+np.isnan(churn_df['Churn']).sum()
+churn_df.dropna(axis = 0, inplace = True)
+
+#Selecting the features and target variables for model evaluation 
+X = churn_df[['Total Spend','Last Interaction']].values
+y = churn_df['Churn'].values
+
+#Verifying the dimensions of the features and target variables before training and testing 
+print(X.shape,y.shape)
+
+#Splitting the dataset into training and testing set
+from sklearn.model_selection import train_test_split
+X_train,X_test,y_train, y_test = train_test_split(X,y,test_size = 0.30, random_state = 42, stratify = y)
+
+
+#Evaluating training and testing accuracies for various number of neighbors 
+#to avoid underfitting and overfitting and take the best possible number of neighbors 
+from sklearn.neighbors import KNeighborsClassifier
+
+training_accuracies = {}
+testing_accuracies = {}
+neighbors = np.arange(1,51)
+for neighbor in neighbors: 
+  knn = KNeighborsClassifier(n_neighbors = neighbor)
+  knn.fit(X_train,y_train)
+  training_accuracies[neighbor] = knn.score(X_train, y_train)
+  testing_accuracies[neighbor] = knn.score(X_test,y_test)
+
+#Visualizing the training and testing accuracies
+from matplotlib import pyplot as plt 
+plt.title("KNN Classifier")
+plt.plot(neighbors, training_accuracies.values(),label = "Training Accuracy")
+plt.plot(neighbors, testing_accuracies.values(), label = "Testing Accuracy")
+plt.legend()
+plt.xlabel("Number of Neighbors")
+plt.ylabel("Accuracy")
+plt.show()
